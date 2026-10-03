@@ -23,3 +23,10 @@ queue/hardware conditions over time). Submission refs are logged in `results/lb_
 **Exploratory arm (declared 2026-10-04, outside the confirmatory A/B):** after the six A/B submissions,
 2–3 submissions of `kernels/combo` (Gittins + 12 serving streams, +7% throughput in the sweep). Reported
 separately as exploratory; it does not enter the A/B analysis.
+
+**Amendment 2 (2026-10-04 05:40 +07, before any Gittins score):** the competition allows
+`maxDailySubmissions = 1` (confirmed via the Kaggle API) and the team wants every remaining slot spent
+on the configuration with the highest expected score. The base arm is therefore **not resubmitted**.
+Design becomes: Gittins arm × 3 (then the exploratory combo arm), compared against the base reference
+set = our base #1 (25.29) plus the independently reported scores of the identical Franzen notebook
+(27.89 in his write-up, 31.47 best public). This is weaker than a balanced A/B and is reported as such.
