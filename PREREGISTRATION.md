@@ -19,3 +19,7 @@ excluded after seeing scores.
 UTC day** (Kaggle: "0 submissions remaining today" after the first). Schedule: one submission per day,
 alternating arms starting base, gittins, gittins, base, base, gittins (ABBAAB to balance any drift in
 queue/hardware conditions over time). Submission refs are logged in `results/lb_submissions.csv`.
+
+**Exploratory arm (declared 2026-10-04, outside the confirmatory A/B):** after the six A/B submissions,
+2–3 submissions of `kernels/combo` (Gittins + 12 serving streams, +7% throughput in the sweep). Reported
+separately as exploratory; it does not enter the A/B analysis.
