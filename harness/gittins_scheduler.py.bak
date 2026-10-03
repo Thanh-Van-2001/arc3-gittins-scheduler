@@ -1,0 +1,161 @@
+"""Bayesian Gittins-index priority for sharing generation compute across games.
+
+Opt-in with ``ARC3_PRIORITY_POLICY=gittins``; everything else keeps Franzen's (A+B)*C priority.
+
+Model. The generated tokens needed to clear level l of a game are log-normal,
+
+    log T = MU + B[l] + u + eps,   eps ~ N(0, S^2),   u ~ N(0, SU^2) shared by all levels of a game,
+
+fitted (censored maximum likelihood) on level attempts from public Duck-family runs. ``u`` is the
+game's latent difficulty: the costs of levels already cleared, and how long the current level has
+resisted, update a discrete posterior over it.
+
+Index. For a reward rate lambda (game-score points per generated token), backward induction gives
+the value of continuing to work on a game with the option to stop at any time:
+
+    Q(l, t) = h(l, t) * (R_l + V(l+1, 0)) + (1 - h(l, t)) * V(l, t + q) - lambda * q,  V = max(0, Q)
+
+per posterior particle (the continuation treats u as known). The game's index is the lambda at
+which the posterior-weighted root value crosses zero: the highest reward rate it can sustain.
+Admitting the game with the highest index is the Gittins rule for this stopping problem.
+
+Never reads hidden metadata: inputs are the level number, tokens spent on it, tokens spent on
+cleared levels, and the public level count.
+"""
+from __future__ import annotations
+
+import math
+import os
+import threading
+from functools import lru_cache
+
+import numpy as np
+
+try:  # vectorised erfc; Kaggle images ship SciPy, but don't make it a hard dependency
+    from scipy.special import erfc as _erfc, log_ndtr as _log_ndtr
+except Exception:  # pragma: no cover - fallback path
+    _erfc_scalar = np.vectorize(math.erfc, otypes=[float])
+
+    def _erfc(x):
+        return _erfc_scalar(np.asarray(x, dtype=float))
+
+    def _log_ndtr(x):
+        return np.log(np.maximum(0.5 * _erfc(-np.asarray(x, dtype=float) / math.sqrt(2.0)), 1e-300))
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name, "").strip()
+    try:
+        return float(raw) if raw else default
+    except ValueError:
+        return default
+
+
+# Censored log-normal fit on 495 level attempts from 12 public runs (25 demo games).
+MU = 10.891                                   # log tokens, level 1, reference run, average game
+B = (0.0, 0.723, 0.553, 0.867, 1.205, 1.180)  # level offsets; level >= 6 shares the last one
+S = 0.946                                     # within-game level noise (log scale)
+SU = 0.772                                    # between-game difficulty spread (log scale)
+# Offset for this deployment: Franzen-config runs are ~0.255x the reference cost (log -1.366);
+# competition games were calibrated ~0.6 harder than the demo set. Overridable for experiments.
+DEFAULT_OFFSET = -1.366 + 0.6
+
+K = 41
+_X = np.linspace(-3.5, 3.5, K)
+_PRIOR_LOG = -0.5 * _X ** 2
+Q_TOKENS = 4000.0
+T_MAX = 600_000.0
+LAMBDAS = np.geomspace(1e-7, 1e-2, 80)
+
+
+def _offset() -> float:
+    return _env_float("ARC3_GITTINS_OFFSET", DEFAULT_OFFSET)
+
+
+def _efficiency() -> float:
+    # Expected per-level score factor min(1, (baseline/actions)^2) for completed levels.
+    return _env_float("ARC3_GITTINS_EFFICIENCY", 0.94)
+
+
+def _level_mean(level_idx: int, offset: float) -> np.ndarray:
+    lv = min(level_idx + 1, len(B))
+    return MU + offset + B[lv - 1] + SU * _X
+
+
+def _norm_sf(z: np.ndarray) -> np.ndarray:
+    return 0.5 * _erfc(z / math.sqrt(2.0))
+
+
+@lru_cache(maxsize=16)
+def _tables(n_levels: int, offset: float, eff: float) -> np.ndarray:
+    """Q[lambda, particle, level, t-step] for a game with n_levels levels."""
+    steps = int(T_MAX // Q_TOKENS)
+    t = np.arange(steps + 1) * Q_TOKENS
+    logt = np.log(np.maximum(t, 1.0))
+    rewards = np.arange(1, n_levels + 1) / (n_levels * (n_levels + 1) / 2.0) * 100.0 * eff
+    Q = np.zeros((len(LAMBDAS), K, n_levels, steps), dtype=np.float32)
+    v_next0 = np.zeros((len(LAMBDAS), K))
+    for level in range(n_levels - 1, -1, -1):
+        m = _level_mean(level, offset)[:, None]
+        surv = _norm_sf((logt[None, :] - m) / S)
+        surv[:, 0] = 1.0
+        hazard = np.clip((surv[:, :-1] - surv[:, 1:]) / np.maximum(surv[:, :-1], 1e-300), 0.0, 1.0)
+        v = np.zeros((len(LAMBDAS), K))
+        gain = rewards[level] + v_next0
+        for i in range(steps - 1, -1, -1):
+            h = hazard[:, i][None, :]
+            q = h * gain + (1.0 - h) * v - LAMBDAS[:, None] * Q_TOKENS
+            Q[:, :, level, i] = q
+            v = np.maximum(0.0, q)
+        v_next0 = v
+    return Q
+
+
+_LOCK = threading.Lock()
+
+
+def posterior(cleared_costs, level_idx: int, tokens_on_level: float, offset: float) -> np.ndarray:
+    logw = _PRIOR_LOG.copy()
+    for lvl, cost in cleared_costs:
+        if cost and cost > 0:
+            z = (math.log(cost) - _level_mean(int(lvl), offset)) / S
+            logw += -0.5 * z ** 2
+    if tokens_on_level > 0:
+        z = (math.log(tokens_on_level) - _level_mean(level_idx, offset)) / S
+        logw += _log_ndtr(-z)
+    w = np.exp(logw - logw.max())
+    return w / w.sum()
+
+
+def gittins_index(level: int, tokens_on_level: float, cleared_costs=(), total_levels=None) -> float:
+    """level is 1-based; cleared_costs is a sequence of (level_1_based, tokens) pairs."""
+    n = int(total_levels) if total_levels else 8
+    n = max(1, min(12, n))
+    level_idx = max(0, min(n - 1, int(level) - 1))
+    offset, eff = _offset(), _efficiency()
+    with _LOCK:
+        Q = _tables(n, round(offset, 4), round(eff, 4))
+    w = posterior([(int(l) - 1, c) for l, c in cleared_costs], level_idx, float(tokens_on_level), offset)
+    i = min(int(max(0.0, tokens_on_level) // Q_TOKENS), Q.shape[3] - 1)
+    root = Q[:, :, level_idx, i].astype(float) @ w
+    pos = np.nonzero(root > 0)[0]
+    if len(pos) == 0:
+        return 0.0
+    j = int(pos[-1])
+    if j + 1 >= len(LAMBDAS):
+        return float(LAMBDAS[-1])
+    a, b = root[j], root[j + 1]
+    la, lb = math.log(LAMBDAS[j]), math.log(LAMBDAS[j + 1])
+    return float(math.exp(la + (lb - la) * a / (a - b)))
+
+
+def gittins_priority(level: int, tokens_on_level: float, cleared_costs=(), total_levels=None) -> int:
+    """Integer priority preserving the index order (log scale, 0.1% resolution, < 10_000)."""
+    idx = gittins_index(level, tokens_on_level, cleared_costs, total_levels)
+    if idx <= 0.0:
+        return 1
+    return max(1, int(1000.0 * (math.log10(idx) + 8.0)))
+
+
+def gittins_enabled() -> bool:
+    return os.environ.get("ARC3_PRIORITY_POLICY", "").strip().lower() == "gittins"
