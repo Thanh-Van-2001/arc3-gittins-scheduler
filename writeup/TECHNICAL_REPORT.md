@@ -160,6 +160,20 @@ the budget) and into easy games, where it clears deeper and more valuable levels
 At 1×, Gittins equals Franzen at about 1.2× compute. Tufa Labs' 52.5 lies at about 1.9× on Franzen's
 curve.
 
+**Why naive reallocation does not help** (`analysis/drop_l0.py`, 6 seeds, same worlds, realistic gate).
+On the Kaggle forum, Scott Le Grand reported that demoting games stuck at level 0 to give L1+/L2+ games
+more time "did no good". The simulator reproduces this:
+
+| Policy | vs Franzen |
+|---|---|
+| Franzen priority + demote games still at level 0 after 50k / 100k / 150k tokens | +0.2 / +0.0 / +0.0 |
+| Same, plus a 2× boost for games at level ≥ 2 | +0.7 |
+| Bayesian Gittins index | **+4.5 ± 0.7** |
+
+Franzen's completion factor C already decays to near zero for long-stuck levels, so explicit
+demotion is redundant. The gain requires inferring each game's difficulty from the levels it has
+already cleared. This matches the ablation, where the prior-only index falls below Franzen.
+
 **Serving configuration is near its frontier** (`analysis/tput.py`, commit-mode runs, 20 games × 12 min,
 gate saturated). Harness-side generation throughput: Franzen's 10 streams with 3 speculative steps,
 624 tokens/s (94.2% of prompt tokens served from cache); 2 speculative steps, 545 (−13%);
