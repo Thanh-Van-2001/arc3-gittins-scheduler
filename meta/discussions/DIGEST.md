@@ -20,3 +20,17 @@ raw threads saved as `<topic_id>.md`. URLs: https://www.kaggle.com/competitions/
 | 732854 | Public-game scores correlate poorly (even negatively) with LB | Don't tune on the 25 public games |
 | 742801 (Jeroen Cottaar, Tufa) | Tufa will not open-source until the end; CPMP (NVIDIA) likewise | Top approaches unavailable before deadline |
 | 744995 | Some runs end after 2–4 h (infra outage) | Watch for truncated submissions |
+
+## Second pass (all 155 topics, 1,020 messages; read 2026-10-04)
+
+| Source | Claim | Use |
+|---|---|---|
+| JustAdev742 notes (GitHub) + forum | Tufa forked an RL post-training stack (slime/miles/verl + Megatron) on Sep 3–9; evaluates on B200 SLURM (20 passes × 25 games); team bios = RL/self-play; Tufa paper on on-policy self-distillation from world feedback | Top-1 gap most likely from post-training, not harness |
+| JustAdev742 notes | Yi-Chia Chen (LB 48) previously shipped own SGLang build, self-trained DFlash drafter (8 draft tokens), on-policy-distilled W4A16 model on the same GPU; "complexity of the process" | Top-2 gap: trained drafter/model + inference engineering |
+| jeroencottaar 687655 (Apr) | `baseline_actions` were visible for the 110 test games during submission | TAAF later treats them as hidden; would give a difficulty prior (our corr 0.42) — not relied on |
+| jeroencottaar 743952 | Hidden-set (private) numbers usually revealed for all submissions at the end | Final evidence for the paper |
+| sirikilohit 744792 | Helpful harness changes were "not misleading the agent": UNDO instead of ACTION7, "level restarted" instead of "game over", removing lines telling it to ignore the budget bar | Already in Franzen's prompts |
+| rakbidb 739938 | Run-to-run variance plausibly from continuous batching: one different token diverges the trajectory | Explains SD ≈ 3.9 |
+| viktorkorsun 738766 | Explore → level reset → perfect replay still pays for exploration actions | Consistent with our scorer reading (only post-WIN reset opens a new play) |
+| asanashirov 739801 | Image upscale 4× (Tufa) vs 8–10× (forks/Franzen): untested contradiction; identical configs spread 2.85 vs 4.75 | Keep Franzen's 10× |
+| chewkokwahibrainai 742148 | RTX PRO 6000 queue worst 02:00–09:00 UTC | Schedule commits outside that window |
