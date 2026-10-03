@@ -43,7 +43,9 @@ def analyse(d):
     acc = [float(x) for x in re.findall(r"accept len: ([0-9.]+)", log)]
     new = sum(int(x) for x in re.findall(r"#new-token: (\d+)", log))
     cached = sum(int(x) for x in re.findall(r"#cached-token: (\d+)", log))
-    return dict(games=len(b["game_runs"]), gen_tokens=tok, span_s=round(t_end), harness_tok_s=round(tok / max(t_end, 1)),
+    kv = re.findall(r"max_total_num_tokens=(\d+)", log)
+    exc = len(re.findall(r"Scheduler hit an exception|Traceback", log))
+    return dict(kv_pool=int(kv[-1]) if kv else None, server_errors=exc, games=len(b["game_runs"]), gen_tokens=tok, span_s=round(t_end), harness_tok_s=round(tok / max(t_end, 1)),
                 decode_tok_s_saturated=round(float(np.mean(full))) if full else None,
                 mean_running=round(float(np.mean([r for r, _ in dec])), 1) if dec else None,
                 accept_len=round(float(np.mean(acc)), 2) if acc else None,

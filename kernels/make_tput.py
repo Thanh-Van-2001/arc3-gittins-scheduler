@@ -13,6 +13,9 @@ CONFIGS = {
     "b": dict(desc="spec 4", streams=10, cfg={"SPEC_STEPS": 4}),
     "c": dict(desc="spec 2", streams=10, cfg={"SPEC_STEPS": 2}),
     "d": dict(desc="12 streams", streams=12, cfg={"MAXREQ": 12, "CUDAGRAPH_MAXBS": 12, "MAMBA_CACHE": 72}),
+    "e": dict(desc="online MXFP8, 10 streams", streams=10, cfg={}, env={"SGLANG_SM120_ONLINE_MXFP8": "true"}),
+    "f": dict(desc="online MXFP8, 12 streams", streams=12, cfg={"MAXREQ": 12, "CUDAGRAPH_MAXBS": 12, "MAMBA_CACHE": 72},
+              env={"SGLANG_SM120_ONLINE_MXFP8": "true"}),
 }
 # 20 demo games so the 10-12 slot gate stays saturated for the whole window
 KEEP = ["ar25", "bp35", "cd82", "cn04", "dc22", "ft09", "g50t", "ka59", "lf52", "lp85",
@@ -24,10 +27,18 @@ def edit(cell, fn):
     cell["source"] = fn(src).splitlines(keepends=True)
 
 
+import sys
+ONLY = sys.argv[1:]
 for key, c in CONFIGS.items():
+    if ONLY and key not in ONLY:
+        continue
     nb = copy.deepcopy(base)
 
     def server(src, c=c):
+        for name, val in c.get("env", {}).items():
+            old = '"%s": "0"' % name
+            assert old in src, name
+            src = src.replace(old, '"%s": "%s"' % (name, val))
         for name, val in c["cfg"].items():
             pat = re.compile(r"(\n\s*" + name + r"=)([^,\n]+)(,)")
             assert pat.search(src), name
