@@ -14,3 +14,8 @@ not dropped silently.
 **Analysis.** Report every scored submission. Primary statistic: difference of arm means with a
 Welch t-interval; secondary: one-sided permutation test over all submissions. No submissions are
 excluded after seeing scores.
+
+**Amendment (2026-10-03 14:00 +07, before any score):** the competition now allows **1 submission per
+UTC day** (Kaggle: "0 submissions remaining today" after the first). Schedule: one submission per day,
+alternating arms starting base, gittins, gittins, base, base, gittins (ABBAAB to balance any drift in
+queue/hardware conditions over time). Submission refs are logged in `results/lb_submissions.csv`.
