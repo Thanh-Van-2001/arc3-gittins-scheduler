@@ -12,7 +12,7 @@ def km(t, e):
         xs.append(t[i]); ys.append(S)
     return np.array(xs), np.array(ys)
 plt.rcParams.update({"figure.facecolor": SURF, "axes.facecolor": SURF, "font.size": 11, "axes.spines.top": False, "axes.spines.right": False})
-fig, axs = plt.subplots(1, 4, figsize=(13, 3.6), sharey=True)
+fig, axs = plt.subplots(1, 4, figsize=(13, 4.0), sharey=True)
 grid = np.geomspace(1e3, 3e6, 200)
 for k, ax in enumerate(axs, start=1):
     sub = df[df.level == k] if k < 4 else df[df.level >= 4]
@@ -31,4 +31,4 @@ for k, ax in enumerate(axs, start=1):
     ax.set_xlabel("generated tokens (reference-run units)", color=INK2, fontsize=10)
 axs[0].set_ylabel("P(level not yet cleared)", color=INK2)
 h, l = axs[0].get_legend_handles_labels(); fig.legend(h, l, loc="upper center", ncol=3, frameon=False, fontsize=10)
-fig.tight_layout(); fig.savefig(r"D:\arc3_paper\figs\fig_km.png", dpi=180); print("ok")
+fig.tight_layout(rect=(0, 0, 1, 0.9)); fig.savefig(r"D:\arc3_paper\figs\fig_km.png", dpi=180); print("ok")
