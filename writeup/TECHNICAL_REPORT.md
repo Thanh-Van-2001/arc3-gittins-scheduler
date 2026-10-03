@@ -174,6 +174,13 @@ Franzen's completion factor C already decays to near zero for long-stuck levels,
 demotion is redundant. The gain requires inferring each game's difficulty from the levels it has
 already cleared. This matches the ablation, where the prior-only index falls below Franzen.
 
+**Where the tokens go after a death** (public runs, `results/budget_*`).
+- 23% of level attempts contain at least one death, and 18.4% of all generated tokens are spent after the first death in a level.
+- In Franzen's demo, the model itself diagnoses 4 of 5 deaths as move-budget deaths: it reads the border bar by eye and miscounts.
+- Random play on the 25 public games with the real engine shows that 23 games have a border bar (about 63 cells, losing 0.5–1.3 cells per action).
+- A deterministic CPU meter tracks each border colour per level attempt and restarts its measurement after refills (`analysis/budget_meter.py`). On attempts that end in a budget death in 20 games, it gives an estimate at 96% of steps. The actions-left error has median 0, MAE 8.5 and 4% median relative error, with no false "≤3 actions left" alarms on surviving attempts.
+- Three games remain inaccurate (ls20, lf52, ft09).
+
 **Serving configuration is near its frontier** (`analysis/tput.py`, commit-mode runs, 20 games × 12 min,
 gate saturated). Harness-side generation throughput: Franzen's 10 streams with 3 speculative steps,
 624 tokens/s (94.2% of prompt tokens served from cache); 2 speculative steps, 545 (−13%);
