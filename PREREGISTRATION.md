@@ -30,3 +30,9 @@ on the configuration with the highest expected score. The base arm is therefore 
 Design becomes: Gittins arm × 3 (then the exploratory combo arm), compared against the base reference
 set = our base #1 (25.29) plus the independently reported scores of the identical Franzen notebook
 (27.89 in his write-up, 31.47 best public). This is weaker than a balanced A/B and is reported as such.
+
+**Amendment 3 (2026-10-04 06:35 +07, before any Gittins score):** the exploratory combo arm is redefined
+after the throughput sweep found no serving gain (12 streams KV-limited; online MXFP8 −21…−37% tok/s):
+`kernels/combo` = Gittins scheduler with the offset recalibrated to the community Franzen-score
+distribution (shift 0.85) + `talyxion_fixes.patch` (keep retained functions on tool timeout); serving
+identical to Franzen. Still exploratory and reported separately from the Gittins-vs-reference comparison.

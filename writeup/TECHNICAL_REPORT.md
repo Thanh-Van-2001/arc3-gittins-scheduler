@@ -187,7 +187,7 @@ gate saturated). Harness-side generation throughput: Franzen's 10 streams with 3
 4 speculative steps, fails at start-up because Qwen3.8's QSA attention caps draft tokens at 4;
 12 streams, 669 (+7%, cache 93.6%). The 12-stream gain is measured before contexts reach their
 steady-state size (58k–128k tokens). At steady state, 12 streams need about 1.1M KV tokens against a
-1.01M pool, so the gain is likely to shrink. We therefore kept Franzen's serving configuration.
+1.01M pool, so the gain is likely to shrink. We therefore kept Franzen's serving configuration. Pennyroyal's online MXFP8 (`SGLANG_SM120_ONLINE_MXFP8`), suggested by public notes as worth +15–28% decode, does free memory (KV pool 1.01M → 1.36M tokens), but on Franzen's W4A16 AutoRound checkpoint it **cut** generation throughput: 395 tokens/s at 10 streams (−37%) and 494 at 12 streams (−21%). The published gain was measured on an NVFP4 checkpoint and does not transfer.
 
 **Leaderboard noise** (`analysis/noise.py`). Splitting level noise into a part fixed per (game, level)
 and a part redrawn per run (ICC 0.46) gives a single-submission SD of about 3.7 points on 55 games.
