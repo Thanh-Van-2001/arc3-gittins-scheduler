@@ -160,6 +160,14 @@ the budget) and into easy games, where it clears deeper and more valuable levels
 At 1×, Gittins equals Franzen at about 1.2× compute. Tufa Labs' 52.5 lies at about 1.9× on Franzen's
 curve.
 
+**Serving configuration is near its frontier** (`analysis/tput.py`, commit-mode runs, 20 games × 12 min,
+gate saturated). Harness-side generation throughput: Franzen's 10 streams with 3 speculative steps,
+624 tokens/s (94.2% of prompt tokens served from cache); 2 speculative steps, 545 (−13%);
+4 speculative steps, fails at start-up because Qwen3.8's QSA attention caps draft tokens at 4;
+12 streams, 669 (+7%, cache 93.6%). The 12-stream gain is measured before contexts reach their
+steady-state size (58k–128k tokens). At steady state, 12 streams need about 1.1M KV tokens against a
+1.01M pool, so the gain is likely to shrink. We therefore kept Franzen's serving configuration.
+
 **Leaderboard noise** (`analysis/noise.py`). Splitting level noise into a part fixed per (game, level)
 and a part redrawn per run (ICC 0.46) gives a single-submission SD of about 3.7 points on 55 games.
 About three submissions per arm are needed to resolve a 5-point effect at 2σ.
