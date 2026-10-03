@@ -2,7 +2,7 @@
 
 **Subtitle:** A calibrated model of how LLM agents progress through ARC-AGI-3 shows the score is bound by levels cleared, not by actions; allocating the fixed 9-hour budget with a Bayesian Gittins index is worth about 20% more compute.
 
-*Team Talyxion. Built on Tufa Labs' Duck harness and Daniel Franzen's Milestone-2 solution; all credit for the agent itself is theirs.*
+*Nguyen Van Thanh, Loi Dinh Nhat, Le Cong Hoang (Team Talyxion). Built on Tufa Labs' Duck harness and Daniel Franzen's Milestone-2 solution; all credit for the agent itself is theirs.*
 
 ---
 

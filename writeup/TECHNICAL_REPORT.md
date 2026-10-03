@@ -1,6 +1,8 @@
 # Spend Tokens Where They Pay — Technical Report
 
-*Companion to the ARC Prize 2026 Paper Track write-up of Team Talyxion. Every number in this report
+*Nguyen Van Thanh, Loi Dinh Nhat, Le Cong Hoang (Team Talyxion).*
+
+*Companion to the ARC Prize 2026 Paper Track write-up. Every number in this report
 is produced by a script in this repository; the script is named next to the number.*
 
 ## 0. Scope and credit

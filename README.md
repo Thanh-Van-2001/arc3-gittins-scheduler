@@ -1,6 +1,6 @@
 # Spend tokens where they pay — Bayesian Gittins scheduling for ARC-AGI-3 agents
 
-Team Talyxion, ARC Prize 2026 Paper Track. Built on Tufa Labs' Duck harness (MIT) and
+Nguyen Van Thanh, Loi Dinh Nhat, Le Cong Hoang (Team Talyxion) — ARC Prize 2026 Paper Track. Built on Tufa Labs' Duck harness (MIT) and
 Daniel Franzen's Milestone-2 solution (Apache-2.0).
 
 | Path | What it is |
@@ -18,3 +18,7 @@ Daniel Franzen's Milestone-2 solution (Apache-2.0).
 | `writeup/WRITEUP.md` | Kaggle writeup (≤1500 words). |
 
 Reproduce: `python meta/collect.py && cd analysis && python level_attempts.py && python costmodel.py && python robust.py && python ablate_scale.py && python figs.py`.
+
+## License
+
+Our code (analysis scripts, `gittins_scheduler.py`, the Gittins patch, tests) is released under the Apache License 2.0; the write-up, report and figures under CC BY 4.0. `harness/franzen.patch` is Daniel Franzen's work (Apache-2.0) and the Duck harness is Tufa Labs' (MIT); see `NOTICE`.
