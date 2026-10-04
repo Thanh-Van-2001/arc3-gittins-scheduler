@@ -36,3 +36,8 @@ after the throughput sweep found no serving gain (12 streams KV-limited; online 
 `kernels/combo` = Gittins scheduler with the offset recalibrated to the community Franzen-score
 distribution (shift 0.85) + `talyxion_fixes.patch` (keep retained functions on tool timeout); serving
 identical to Franzen. Still exploratory and reported separately from the Gittins-vs-reference comparison.
+
+**Log 2026-10-04 00:00 UTC:** following the instruction to spend every slot on the highest-expected
+configuration, the day-2 slot went to the combo arm (ref 56808799), not Gittins v2. Analysis: every
+combo/Gittins submission is compared against the community Franzen distribution (25.77 ± 3.93) and our
+base #1 (25.29); combo and Gittins-v2 scores are reported separately.
