@@ -181,6 +181,31 @@ already cleared. This matches the ablation, where the prior-only index falls bel
 - A deterministic CPU meter tracks each border colour per level attempt and restarts its measurement after refills (`analysis/budget_meter.py`). On attempts that end in a budget death in 20 games, it gives an estimate at 96% of steps. The actions-left error has median 0, MAE 8.5 and 4% median relative error, with no false "≤3 actions left" alarms on surviving attempts.
 - Three games remain inaccurate (ls20, lf52, ft09).
 
+**Mechanism check on Kaggle under contention** (`kernels/diag`, `analysis/diag_gate.py`). The
+commit-time demo never contends (3 games, 10 slots), so the gate path had not run on Kaggle. The
+diagnostic run used 25 public games, 4 slots, a 48k harness context so that trims happen often, and
+a log of every pricing.
+- The policy was active (offset −0.516). There were 105 handovers and 1,829 pricings, with
+  priorities ranging 4288–5003 (a 5× spread in index).
+- Five games that kept clearing levels received 63% of all generated tokens (sb26, ft09, re86,
+  sp80, vc33). Games stuck at level 0 were not re-admitted after their first chunk.
+- Correlation between tokens and levels per game: 0.91.
+
+The scheduler steers compute as designed. The leaderboard null of the first combo run (25.49) is
+therefore not an implementation fault.
+
+**Leaderboard so far.**
+
+| Submission | Score |
+|---|---|
+| Base (Franzen unchanged) | 25.29 |
+| Combo #1 (Gittins + fix) | 25.49 |
+| Community distribution of single Franzen-copy submissions | 25.77 ± 3.93 |
+
+A faithful trim-only gate simulation still predicts +4.7 to +6.7 (`analysis/faithful.py`). One run
+cannot resolve this (posterior effect +1.8 ± 2.4 under a discounted prior), so more combo
+submissions are being collected.
+
 **Serving configuration is near its frontier** (`analysis/tput.py`, commit-mode runs, 20 games × 12 min,
 gate saturated). Harness-side generation throughput: Franzen's 10 streams with 3 speculative steps,
 624 tokens/s (94.2% of prompt tokens served from cache); 2 speculative steps, 545 (−13%);
