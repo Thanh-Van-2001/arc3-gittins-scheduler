@@ -187,7 +187,7 @@ diagnostic run used 25 public games, 4 slots, a 48k harness context so that trim
 a log of every pricing.
 - The policy was active (offset −0.516). There were 105 handovers and 1,829 pricings, with
   priorities ranging 4288–5003 (a 5× spread in index).
-- Five games that kept clearing levels received 63% of all generated tokens (sb26, ft09, re86,
+- Five games that kept clearing levels received 70% of all generated tokens (sb26, ft09, re86,
   sp80, vc33). Games stuck at level 0 were not re-admitted after their first chunk.
 - Correlation between tokens and levels per game: 0.91.
 
