@@ -20,12 +20,12 @@ hist = []
 # previous level, should be ignored
 hist.append(HistoryEntry(action="UP", frame=Frame(grid=grid(64, 3), step=1, level=1)))
 # current level 2 attempt: bar 64 -> 56, 2 cells per action
-for i in range(5):
+for i in range(8):
     hist.append(HistoryEntry(action="RIGHT", frame=Frame(grid=grid(64 - 2 * i, 10 + i), step=2 + i, level=2)))
 cur = hist[-1].frame
 line = ta._budget_meter_line(hist, cur)
 print(line)
-assert "roughly 28 actions remain" in line, line
+assert "roughly 25 actions remain" in line and "last 7 actions" in line, line
 
 # after a RESET the attempt restarts: too few observations -> no claim
 hist.append(HistoryEntry(action="RESET", frame=Frame(grid=grid(64, 10), step=8, level=2)))

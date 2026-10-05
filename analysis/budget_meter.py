@@ -11,8 +11,8 @@ from __future__ import annotations
 import numpy as np
 
 BORDER = 4
-MIN_STEPS = 3          # actions observed in this attempt before reporting
-MIN_DROP = 3           # cells the bar must have lost
+MIN_STEPS = 6          # actions observed in this attempt before reporting
+MIN_DROP = 4           # cells the bar must have lost
 MIN_START = 12         # bar length at the start of the attempt (cells)
 
 
@@ -62,7 +62,8 @@ class BudgetMeter:
         if best is None:
             return None
         _, c, now, rate = best
-        return dict(colour=c, cells_left=now, cells_per_action=round(rate, 3), actions_left=int(now / rate) if rate > 0 else None)
+        return dict(colour=c, cells_left=now, cells_per_action=round(rate, 3), actions_left=int(now / rate) if rate > 0 else None,
+                    observed=len(self.series) - 1)
 
     def describe(self) -> str:
         e = self.estimate()
@@ -70,4 +71,5 @@ class BudgetMeter:
             return ""
         return (f"Budget meter (harness estimate from the border bar, colour {e['colour']}): "
                 f"{e['cells_left']} cells left, losing ~{e['cells_per_action']:.2f} per action, "
-                f"so roughly {e['actions_left']} actions remain in this attempt. Approximate.")
+                f"so roughly {e['actions_left']} actions remain in this attempt "
+                f"(estimated from the last {e['observed']} actions; approximate).")
