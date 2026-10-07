@@ -16,6 +16,13 @@ CONFIGS = {
     "e": dict(desc="online MXFP8, 10 streams", streams=10, cfg={}, env={"SGLANG_SM120_ONLINE_MXFP8": "true"}),
     "f": dict(desc="online MXFP8, 12 streams", streams=12, cfg={"MAXREQ": 12, "CUDAGRAPH_MAXBS": 12, "MAMBA_CACHE": 72},
               env={"SGLANG_SM120_ONLINE_MXFP8": "true"}),
+    # Saturday batch: 30-minute windows so contexts reach steady state (trims, KV pressure)
+    "a30": dict(desc="control, 30 min", streams=10, cfg={}, minutes=30),
+    "h30": dict(desc="11 streams + HiCache 32G, 30 min", streams=11, cfg={"MAXREQ": 11, "CUDAGRAPH_MAXBS": 11, "MAMBA_CACHE": 66},
+                hicache=32, minutes=30),
+    "i30": dict(desc="12 streams + HiCache 32G, 30 min", streams=12, cfg={"MAXREQ": 12, "CUDAGRAPH_MAXBS": 12, "MAMBA_CACHE": 72},
+                hicache=32, minutes=30),
+    "j30": dict(desc="relaxed speculative acceptance 0.5, 30 min", streams=10, cfg={"SPEC_ACCEPT_SINGLE": 0.5, "SPEC_ACCEPT_ACC": 0.5}, minutes=30),
 }
 # 20 demo games so the 10-12 slot gate stays saturated for the whole window
 KEEP = ["ar25", "bp35", "cd82", "cn04", "dc22", "ft09", "g50t", "ka59", "lf52", "lp85",
@@ -43,6 +50,12 @@ for key, c in CONFIGS.items():
             pat = re.compile(r"(\n\s*" + name + r"=)([^,\n]+)(,)")
             assert pat.search(src), name
             src = pat.sub(lambda m: m.group(1) + str(val) + m.group(3), src, count=1)
+        if c.get("hicache"):
+            old = '"--enable-cache-report", "--enable-metrics", "--enable-request-time-stats-logging"]'
+            assert old in src
+            extra = ('args += ["--enable-hierarchical-cache", "--hicache-size", "%d", '
+                     '"--hicache-write-policy", "write_through", "--hicache-io-backend", "kernel"]' % c["hicache"])
+            src = src.replace(old, old + chr(10) + extra)
         return src
 
     def harness(src, c=c):
@@ -58,6 +71,8 @@ for key, c in CONFIGS.items():
     edit(nb["cells"][12], server)
     edit(nb["cells"][4], harness)
     edit(nb["cells"][16], demo)
+    if c.get("minutes"):
+        edit(nb["cells"][16], lambda src, m=c["minutes"]: src.replace("bm.solver.max_runtime_s_per_game = 12*60  # short demo", "bm.solver.max_runtime_s_per_game = %d*60  # tput window" % m))
     nb["cells"].insert(0, {"cell_type": "markdown", "metadata": {}, "source": [
         "# Throughput benchmark config %s: %s\n" % (key.upper(), c["desc"]), "\n",
         "Private benchmarking copy of the Franzen M2 notebook (Apache-2.0). Not for submission."]})
