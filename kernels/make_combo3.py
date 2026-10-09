@@ -1,4 +1,7 @@
-"""Build combo3: combo (Franzen M2 + Bayesian Gittins + retained-function fix) on REAP-448 + 14 streams + ARC FR-Spec map.
+"""Build combo3: combo (Franzen M2 + Bayesian Gittins + retained-function fix) on REAP-448 + 14 streams.
+
+The ARC FR-Spec map (--hot-tokens) is left out: built on Windows its sha256 did not match on Kaggle (v1 failed at
+the map assert), and it is worth only ~2% tok/s.
 
 Serving changes come from JustAdev742/scottmahony's Apache-2.0 tooling (scripts/build_franzen_nb.py,
 scripts/sglang_reap_patch.py, kaggle/franzen/reap448_kept_experts.json, hot_tokens_64k_arc.pt); their gates measured
@@ -6,6 +9,7 @@ scripts/sglang_reap_patch.py, kaggle/franzen/reap448_kept_experts.json, hot_toke
 
     python make_combo3.py            # arc3-talyxion-combo3      (short save run, the submission kernel)
     python make_combo3.py full       # arc3-talyxion-combo3-full (25 public games x 121 min, evaluation only)
+    python make_combo3.py full nog   # arc3-talyxion-combo3-nog-full: the same without Gittins (Franzen's gate)
 """
 import json
 import os
@@ -17,18 +21,26 @@ JUSTA = Path(os.environ["TEMP"]) / "ghscan2" / "justa"
 HERE = Path(__file__).resolve().parent
 HARNESS = HERE.parent / "harness"
 full = "full" in sys.argv[1:]
-slug = "arc3-talyxion-combo3" + ("-full" if full else "")
+nog = "nog" in sys.argv[1:]
+slug = "arc3-talyxion-combo3" + ("-nog" if nog else "") + ("-full" if full else "")
 out = HERE / slug.replace("arc3-talyxion-", "")
-NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams + ARC FR-Spec "
-        "map (REAP/map tooling: JustAdev742/scottmahony, Apache-2.0)")
+NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams "
+        "(REAP/map tooling: JustAdev742/scottmahony, Apache-2.0)")
 cmd = [sys.executable, "scripts/build_franzen_nb.py", "--out", str(out), "--slug", slug,
        "--patch", str(HARNESS / "talyxion_gittins.patch"), "--patch", str(HARNESS / "talyxion_fixes.patch"),
        "--env-add", "ARC3_PRIORITY_POLICY=gittins", "--env-add", "ARC3_GITTINS_OFFSET=-0.516",
        "--env", "ARC3_MAX_ACTIVE_STREAMS=14", "--cfg", "MAXREQ=14", "--cfg", "CUDAGRAPH_MAXBS=14", "--cfg", "MAMBA_CACHE=84",
-       "--reap-kept", "kaggle/franzen/reap448_kept_experts.json", "--hot-tokens", "kaggle/franzen/hot_tokens_64k_arc.pt",
+       "--reap-kept", "kaggle/franzen/reap448_kept_experts.json",
        "--input-fallback", "--compact", "--no-apply-check", "--note", NOTE]
 if full:
     cmd += ["--full25", "121", "--fail-fast"]
+if nog:
+    for flag in ("--patch", "--env-add", "--env-add"):
+        i = cmd.index(flag)
+        if flag == "--patch":
+            assert cmd[i + 1].endswith("talyxion_gittins.patch")
+        del cmd[i:i + 2]
+    cmd[cmd.index("--note") + 1] = NOTE.replace("Bayesian Gittins + ", "") + " [control: Franzen's gate]"
 subprocess.run(cmd, cwd=JUSTA, check=True, env=dict(os.environ, PYTHONUTF8="1"))
 
 nb_path = out / f"{slug}.ipynb"
