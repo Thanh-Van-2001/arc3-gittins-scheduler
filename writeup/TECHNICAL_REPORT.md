@@ -180,7 +180,7 @@ already cleared. This matches the ablation, where the prior-only index falls bel
 - Random play on the 25 public games with the real engine shows that 23 games have a border bar (about 63 cells, losing 0.5–1.3 cells per action).
 - A deterministic CPU meter tracks each border colour per level attempt and restarts its measurement after refills (`analysis/budget_meter.py`). On attempts that end in a budget death in 20 games, it gives an estimate at 96% of steps. The actions-left error has median 0, MAE 8.5 and 4% median relative error, with no false "≤3 actions left" alarms on surviving attempts.
 - Three games remain inaccurate (ls20, lf52, ft09).
-- On the leaderboard, adding the meter line to the prompt (`combo2`) scored 24.54 and 19.08, against 25.49 / 28.45 / 26.72 for the same notebook without it (Welch t ≈ 1.8). Accurate per-turn information still cost points, consistent with community reports that extra prompt text hurts. Rejected.
+- On the leaderboard, adding the meter line to the prompt (`combo2`) scored 24.54 and 19.08, against 25.49 / 28.45 / 26.72 / 21.30 for the same notebook without it (t ≈ 1.4). There is no evidence of a gain, and some of a loss, consistent with community reports that extra prompt text hurts. Not adopted.
 
 **Mechanism check on Kaggle under contention** (`kernels/diag`, `analysis/diag_gate.py`). The
 commit-time demo never contends (3 games, 10 slots), so the gate path had not run on Kaggle. The

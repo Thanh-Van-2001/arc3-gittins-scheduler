@@ -96,7 +96,7 @@ We report every submission until the deadline, favourable or not.
 | Serving is at its frontier | 2 speculative steps: −13% tokens/s. 4 steps: refused by the QSA kernel. 12 streams: +7% before steady state, then limited by KV memory | Kept Franzen's serving |
 | Online MXFP8, publicly suggested as +15–28% | Frees 35% KV memory but cuts throughput 21–37% and raises tokens per cleared level about 1.5× on this W4A16 checkpoint | Rejected |
 | Retained helper functions | Upstream silently dropped all of them on any tool timeout; we fixed it with a regression test | Fix shipped |
-| Budget meter: 18% of tokens follow a death, mostly budget-bar deaths | Accurate offline (92% coverage, median error 0), but adding its line to the prompt scored 24.54 and 19.08 versus the combo's 26.89 mean | Rejected: accurate information can still cost points |
+| Budget meter: 18% of tokens follow a death, mostly budget-bar deaths | Accurate offline (92% coverage, median error 0); with its line in the prompt, two runs scored 24.54 and 19.08 versus 25.49 mean for the same notebook without it (t ≈ 1.4) | Not adopted: no evidence of gain |
 
 ## 8. Universality, progress, novelty
 
