@@ -45,6 +45,11 @@ subprocess.run(cmd, cwd=JUSTA, check=True, env=dict(os.environ, PYTHONUTF8="1"))
 
 nb_path = out / f"{slug}.ipynb"
 nb = json.loads(nb_path.read_text(encoding="utf-8"))
+sys.path.insert(0, str(HERE))
+from robust_input import harden  # noqa: E402  (v3: model-path fallback + 40-min first-request grace)
+hits = [c for c in nb["cells"] if "def _ours_input(path):" in "".join(c["source"])]
+assert len(hits) == 1
+hits[0]["source"] = harden("".join(hits[0]["source"])).splitlines(keepends=True)
 first = "".join(nb["cells"][0]["source"])
 assert "**Our arm (scottmahony, built by " in first
 nb["cells"][0]["source"] = first.replace("**Our arm (scottmahony, built by ", "**Talyxion arm (built with JustAdev742's ").splitlines(keepends=True)
