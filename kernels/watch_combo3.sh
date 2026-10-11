@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Wait for a kernel to finish, then fetch its logs (not the large artefacts) into results/<name>.
-cd /c/Users/Admin/AppData/Local/Temp
-K="./kgl/Scripts/python.exe -m kaggle"
+cd /d/dev_tools
+K="./kaggle_venv/Scripts/python.exe -m kaggle"  # %TEMP%kgl was broken by a Temp cleanup on 10-11
 k=$1
 while :; do
   s=$($K kernels status thnhnguyn2001/arc3-talyxion-$k 2>&1 | tail -1)

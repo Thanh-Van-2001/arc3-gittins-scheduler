@@ -4,8 +4,8 @@
 # ("slug version message"). On Saturdays it waits until 02:00 UTC: the weekly quota reset at 00:00 UTC slowed
 # /kaggle/input 4-5x (JustAdev742's log) and combo3 #1 submitted then scored 0.00.
 set -u
-cd /c/Users/Admin/AppData/Local/Temp || exit 1
-K="./kgl/Scripts/python.exe -m kaggle"
+cd /d/dev_tools || exit 1
+K="./kaggle_venv/Scripts/python.exe -m kaggle"  # %TEMP%kgl was broken by a Temp cleanup on 10-11
 LOG=/d/arc3_paper/results/scheduler.log
 PLAN=/d/arc3_paper/kernels/next_submission.txt
 [ "$(date -u +%Y%m%d)" -gt 20261102 ] && exit 0
