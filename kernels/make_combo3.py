@@ -10,6 +10,8 @@ scripts/sglang_reap_patch.py, kaggle/franzen/reap448_kept_experts.json, hot_toke
     python make_combo3.py            # arc3-talyxion-combo3      (short save run, the submission kernel)
     python make_combo3.py full       # arc3-talyxion-combo3-full (25 public games x 121 min, evaluation only)
     python make_combo3.py full nog   # arc3-talyxion-combo3-nog-full: the same without Gittins (Franzen's gate)
+    python make_combo3.py [full] bundle  # arc3-talyxion-combo4[-full]: + JustAdev742's harness bundle (budget meter,
+                                         # search helper, win ledger, level mem, perception; their LB draw 34.04)
 """
 import json
 import os
@@ -22,7 +24,8 @@ HERE = Path(__file__).resolve().parent
 HARNESS = HERE.parent / "harness"
 full = "full" in sys.argv[1:]
 nog = "nog" in sys.argv[1:]
-slug = "arc3-talyxion-combo3" + ("-nog" if nog else "") + ("-full" if full else "")
+bundle = "bundle" in sys.argv[1:]
+slug = ("arc3-talyxion-combo4" if bundle else "arc3-talyxion-combo3") + ("-nog" if nog else "") + ("-full" if full else "")
 out = HERE / slug.replace("arc3-talyxion-", "")
 NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams "
         "(REAP/map tooling: JustAdev742/scottmahony, Apache-2.0)")
@@ -34,6 +37,11 @@ cmd = [sys.executable, "scripts/build_franzen_nb.py", "--out", str(out), "--slug
        "--input-fallback", "--compact", "--no-apply-check", "--note", NOTE]
 if full:
     cmd += ["--full25", "121", "--fail-fast"]
+if bundle:
+    cmd += ["--patch", str(HARNESS / "justa_bundle.patch")]
+    for flag in ("OURS_BUDGET_METER", "OURS_SEARCH_HELPER", "OURS_WIN_LEDGER", "OURS_LEVEL_MEM", "OURS_PERCEPTION"):
+        cmd += ["--env-add", flag + "=1"]
+    cmd[cmd.index("--note") + 1] = NOTE + " + JustAdev742 harness bundle (ours-01 time, 02, 04, 03b, 05, 08b)"
 if nog:
     for flag in ("--patch", "--env-add", "--env-add"):
         i = cmd.index(flag)
