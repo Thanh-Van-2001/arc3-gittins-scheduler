@@ -25,6 +25,7 @@ HARNESS = HERE.parent / "harness"
 full = "full" in sys.argv[1:]
 nog = "nog" in sys.argv[1:]
 bundle = "bundle" in sys.argv[1:]
+use_map = "map" in sys.argv[1:]  # ARC FR-Spec map: build on Linux (zip create_system differs on Windows)
 slug = ("arc3-talyxion-combo4" if bundle else "arc3-talyxion-combo3") + ("-nog" if nog else "") + ("-full" if full else "")
 out = HERE / slug.replace("arc3-talyxion-", "")
 NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams "
@@ -37,6 +38,8 @@ cmd = [sys.executable, "scripts/build_franzen_nb.py", "--out", str(out), "--slug
        "--input-fallback", "--compact", "--no-apply-check", "--note", NOTE]
 if full:
     cmd += ["--full25", "121", "--fail-fast"]
+if use_map:
+    cmd += ["--hot-tokens", "kaggle/franzen/hot_tokens_64k_arc.pt"]
 if bundle:
     cmd += ["--patch", str(HARNESS / "justa_bundle.patch")]
     for flag in ("OURS_BUDGET_METER", "OURS_SEARCH_HELPER", "OURS_WIN_LEDGER", "OURS_LEVEL_MEM", "OURS_PERCEPTION"):
