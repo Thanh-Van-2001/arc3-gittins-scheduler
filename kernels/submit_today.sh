@@ -18,7 +18,9 @@ if latest | grep -q "$D"; then
   echo "$(date -u +%F' '%H:%M) slot $DD already used (task run)" >> $LOG
   exit 0
 fi
-read -r SLUG VER MSG < "$PLAN"
+# several plan lines = alternate by UTC day (line = day number mod N)
+N=$(grep -c . "$PLAN"); IDX=$(( $(date -u +%s) / 86400 % N + 1 ))
+read -r SLUG VER MSG <<< "$(grep . "$PLAN" | sed -n "${IDX}p")"
 for i in $(seq 1 20); do
   $K competitions submit -c arc-prize-2026-arc-agi-3 -k "thnhnguyn2001/$SLUG" -v "$VER" -f submission.parquet \
      -m "$MSG (slot $DD)" >> $LOG 2>&1
