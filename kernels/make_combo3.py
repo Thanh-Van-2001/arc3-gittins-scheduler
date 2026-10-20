@@ -26,8 +26,9 @@ full = "full" in sys.argv[1:]
 nog = "nog" in sys.argv[1:]
 bundle = "bundle" in sys.argv[1:]
 use_map = "map" in sys.argv[1:]  # ARC FR-Spec map: build on Linux (zip create_system differs on Windows)
-logs = "logs" in sys.argv[1:]  # full runs: write *_requests.jsonl (MTP draft fine-tune data)
-slug = ("arc3-talyxion-combo4" if bundle else "arc3-talyxion-combo3") + ("-nog" if nog else "") + ("-full" if full else "")
+logs = "logs" in sys.argv[1:]
+use_draft = "draft" in sys.argv[1:]  # fine-tuned MTP draft from our session A (combo5)
+slug = ("arc3-talyxion-combo5" if use_draft else "arc3-talyxion-combo4" if bundle else "arc3-talyxion-combo3") + ("-nog" if nog else "") + ("-full" if full else "")
 out = HERE / slug.replace("arc3-talyxion-", "")
 NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams "
         "(REAP/map tooling: JustAdev742/scottmahony, Apache-2.0)")
@@ -40,6 +41,9 @@ cmd = [sys.executable, "scripts/build_franzen_nb.py", "--out", str(out), "--slug
        "--input-fallback", "--compact", "--no-apply-check", "--note", NOTE]
 if full:
     cmd += ["--full25", "121", "--fail-fast"]
+if use_draft:
+    cmd += ["--draft", "thnhnguyn2001/arc3-talyxion-mtp-session-a",
+            "--draft-manifest", str(HARNESS / "talyxion_draft_manifest.json")]
 if use_map:
     cmd += ["--hot-tokens", "kaggle/franzen/hot_tokens_64k_arc.pt"]
 if bundle:
