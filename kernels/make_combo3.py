@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-JUSTA = Path(os.environ.get("JUSTA") or (r"D:dev_toolsjusta" if os.name == "nt" else Path(os.environ["TEMP"]) / "ghscan2" / "justa"))
+JUSTA = Path(os.environ.get("JUSTA") or ("D:/dev_tools/justa" if os.name == "nt" else Path(os.environ["TEMP"]) / "ghscan2" / "justa"))
 HERE = Path(__file__).resolve().parent
 HARNESS = HERE.parent / "harness"
 full = "full" in sys.argv[1:]
