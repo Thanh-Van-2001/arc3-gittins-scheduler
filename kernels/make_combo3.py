@@ -19,13 +19,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-JUSTA = Path(os.environ["TEMP"]) / "ghscan2" / "justa"
+JUSTA = Path(os.environ.get("JUSTA") or (r"D:dev_toolsjusta" if os.name == "nt" else Path(os.environ["TEMP"]) / "ghscan2" / "justa"))
 HERE = Path(__file__).resolve().parent
 HARNESS = HERE.parent / "harness"
 full = "full" in sys.argv[1:]
 nog = "nog" in sys.argv[1:]
 bundle = "bundle" in sys.argv[1:]
 use_map = "map" in sys.argv[1:]  # ARC FR-Spec map: build on Linux (zip create_system differs on Windows)
+logs = "logs" in sys.argv[1:]  # full runs: write *_requests.jsonl (MTP draft fine-tune data)
 slug = ("arc3-talyxion-combo4" if bundle else "arc3-talyxion-combo3") + ("-nog" if nog else "") + ("-full" if full else "")
 out = HERE / slug.replace("arc3-talyxion-", "")
 NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix + REAP-448 + 14 streams "
@@ -61,6 +62,13 @@ from robust_input import harden  # noqa: E402  (v3: model-path fallback + 40-min
 hits = [c for c in nb["cells"] if "def _ours_input(path):" in "".join(c["source"])]
 assert len(hits) == 1
 hits[0]["source"] = harden("".join(hits[0]["source"])).splitlines(keepends=True)
+if logs:
+    anchor = "bm.solver.max_runtime_s_per_game = 121.0*60  # ours (--full25)"
+    hits = [c for c in nb["cells"] if anchor in "".join(c["source"])]
+    assert full and len(hits) == 1
+    hits[0]["source"] = "".join(hits[0]["source"]).replace(
+        anchor, anchor + "\n        bm.solver.save_request_logs = True  # Talyxion: request logs for the MTP fine-tune"
+    ).splitlines(keepends=True)
 first = "".join(nb["cells"][0]["source"])
 assert "**Our arm (scottmahony, built by " in first
 nb["cells"][0]["source"] = first.replace("**Our arm (scottmahony, built by ", "**Talyxion arm (built with JustAdev742's ").splitlines(keepends=True)
