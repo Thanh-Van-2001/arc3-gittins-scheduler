@@ -33,6 +33,7 @@ NOTE = ("Talyxion combo3: Franzen M2 + Bayesian Gittins + retained-function fix 
         "(REAP/map tooling: JustAdev742/scottmahony, Apache-2.0)")
 cmd = [sys.executable, "scripts/build_franzen_nb.py", "--out", str(out), "--slug", slug,
        "--patch", str(HARNESS / "talyxion_gittins.patch"), "--patch", str(HARNESS / "talyxion_fixes.patch"),
+       "--patch", str(HARNESS / "talyxion_keepalive.patch"),  # RESET every 9 min until /health (15-min idle rule)
        "--env-add", "ARC3_PRIORITY_POLICY=gittins", "--env-add", "ARC3_GITTINS_OFFSET=-0.516",
        "--env", "ARC3_MAX_ACTIVE_STREAMS=14", "--cfg", "MAXREQ=14", "--cfg", "CUDAGRAPH_MAXBS=14", "--cfg", "MAMBA_CACHE=84",
        "--reap-kept", "kaggle/franzen/reap448_kept_experts.json",

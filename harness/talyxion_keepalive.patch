@@ -1,0 +1,57 @@
+diff --git a/ARC3-Inference/inference/framework/solver.py b/ARC3-Inference/inference/framework/solver.py
+index e40976c..1246bde 100644
+--- a/ARC3-Inference/inference/framework/solver.py
++++ b/ARC3-Inference/inference/framework/solver.py
+@@ -100,6 +100,44 @@ ANALYZER_RETRY_BACKOFF_SECONDS = max(
+ # while the server is still loading; the HTTP retry loop then covers the rest of
+ # the wait. 0 disables.
+ WARMUP_ACTION_GAMES = _env_number("ARC3_WARMUP_ACTION_GAMES", 0, int)
++# Talyxion: the competition ends a run after 15 minutes without any game action (host, forum topic 750173). With a
++# slow model boot (Saturday storage ran 4-5x slow) one warmup RESET is not enough, so the warmup game keeps resetting
++# every ARC3_KEEPALIVE_SECONDS until the analyzer endpoint answers /health. 0 disables it.
++KEEPALIVE_SECONDS = _env_number("ARC3_KEEPALIVE_SECONDS", 540, int)
++
++
++def _analyzer_healthy() -> bool:
++    import urllib.request
++
++    base = os.environ.get("LOCAL_ANALYZER_BASE_URL", "").strip().rstrip("/")
++    if not base:
++        return True
++    if base.endswith("/v1"):
++        base = base[:-3]
++    try:
++        with urllib.request.urlopen(base + "/health", timeout=5) as response:
++            return response.status == 200
++    except Exception:
++        return False
++
++
++def _start_startup_keepalive(game_solver) -> None:
++    if KEEPALIVE_SECONDS <= 0:
++        return
++
++    def loop() -> None:
++        while True:
++            time.sleep(KEEPALIVE_SECONDS)
++            try:
++                if game_solver.should_stop() or _analyzer_healthy():
++                    return
++                log.warning("keepalive RESET: analyzer endpoint still not healthy")
++                game_solver._execute_auto_reset()
++            except Exception as exc:  # never let the keepalive take the game down
++                log.warning("keepalive stopped: %s", exc)
++                return
++
++    threading.Thread(target=loop, name="arc3-startup-keepalive", daemon=True).start()
+ 
+ 
+ MAX_CONSECUTIVE_ANALYZER_FAILURES = _env_number("ARC3_MAX_ANALYZER_FAILURES", 10, int)
+@@ -649,6 +687,7 @@ class _HarnessGameSession:
+                 run.game_id,
+             )
+             self._execute_auto_reset()
++            _start_startup_keepalive(self)
+         try:
+             retry_analysis_step: int | None = None
+             consecutive_failures = 0
