@@ -77,6 +77,11 @@ if logs:
     hits[0]["source"] = "".join(hits[0]["source"]).replace(
         anchor, anchor + "\n        bm.solver.save_request_logs = True  # Talyxion: request logs for the MTP fine-tune"
     ).splitlines(keepends=True)
+if use_draft:
+    from draft_fallback import ALBUCINO_MODEL, harden_draft  # noqa: E402  (v2: search + albucino fallback)
+    hits = [c for c in nb["cells"] if "def _ours_draft_dir" in "".join(c["source"])]
+    assert len(hits) == 1
+    hits[0]["source"] = harden_draft("".join(hits[0]["source"])).splitlines(keepends=True)
 first = "".join(nb["cells"][0]["source"])
 assert "**Our arm (scottmahony, built by " in first
 nb["cells"][0]["source"] = first.replace("**Our arm (scottmahony, built by ", "**Talyxion arm (built with JustAdev742's ").splitlines(keepends=True)
@@ -84,5 +89,7 @@ nb_path.write_text(json.dumps(nb, ensure_ascii=False, indent=1), encoding="utf-8
 meta_path = out / "kernel-metadata.json"
 meta = json.loads(meta_path.read_text())
 meta.update(id=f"thnhnguyn2001/{slug}", title=slug)
+if use_draft and ALBUCINO_MODEL not in meta["model_sources"]:
+    meta["model_sources"].append(ALBUCINO_MODEL)
 meta_path.write_text(json.dumps(meta, indent=1))
 print("wrote", nb_path, meta["id"])
