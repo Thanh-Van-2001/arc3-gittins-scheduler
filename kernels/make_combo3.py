@@ -91,5 +91,8 @@ meta = json.loads(meta_path.read_text())
 meta.update(id=f"thnhnguyn2001/{slug}", title=slug)
 if use_draft and ALBUCINO_MODEL not in meta["model_sources"]:
     meta["model_sources"].append(ALBUCINO_MODEL)
+if use_draft:  # v4: the draft comes from a private dataset (kernel-output mounts failed at setup on 10-23)
+    meta["kernel_sources"] = [k for k in meta["kernel_sources"] if not k.endswith("arc3-talyxion-mtp-session-a")]
+    meta["dataset_sources"].append("thnhnguyn2001/arc3-talyxion-mtp-draft")
 meta_path.write_text(json.dumps(meta, indent=1))
 print("wrote", nb_path, meta["id"])

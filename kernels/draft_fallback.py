@@ -42,6 +42,28 @@ def harden_draft(src: str) -> str:
     src = src.replace("        raise RuntimeError(f'MTP draft {path}: mtp",
                       "        print('ours: WARNING draft dense mismatch; falling back to albucino'); return None\n"
                       "        raise RuntimeError(f'MTP draft {path}: mtp")
+    # v4: the dataset ships only the fine-tuned dense shard and small files; the 4 GB routed-expert shard (unchanged
+    # from albucino, not trained) is linked from the albucino model source into a combined directory
+    anchor = "    print(f'ours: MTP draft {path} after"
+    assert src.count(anchor) == 1
+    combine = (
+        "    if not os.path.isfile(os.path.join(path, 'mtp-routed-experts-int4.safetensors')):\n"
+        f"        alb = _ours_input({ALBUCINO_PATH!r})\n"
+        "        src_exp = os.path.join(alb, 'mtp-routed-experts-int4.safetensors')\n"
+        "        if not os.path.isfile(src_exp):\n"
+        "            print('ours: WARNING albucino has no mtp-routed-experts-int4.safetensors; falling back to albucino')\n"
+        "            return None\n"
+        "        comb = '/tmp/ours-draft-combined'\n"
+        "        os.makedirs(comb, exist_ok=True)\n"
+        "        for f in os.listdir(path):\n"
+        "            if not os.path.lexists(os.path.join(comb, f)):\n"
+        "                os.symlink(os.path.join(path, f), os.path.join(comb, f))\n"
+        "        if not os.path.lexists(os.path.join(comb, 'mtp-routed-experts-int4.safetensors')):\n"
+        "            os.symlink(src_exp, os.path.join(comb, 'mtp-routed-experts-int4.safetensors'))\n"
+        "        print(f'ours: MTP draft combined in {comb}: {path} + routed experts from {alb}')\n"
+        "        path = comb\n"
+    )
+    src = src.replace(anchor, combine + anchor)
     line_start = src.index("DRAFT_MODEL_DIR   = _ours_draft_dir(")
     line_end = src.index("\n", line_start)
     call = src[line_start:line_end]
