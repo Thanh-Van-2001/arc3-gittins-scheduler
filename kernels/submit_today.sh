@@ -13,7 +13,7 @@ if [ "$(date -u +%u)" = 6 ]; then
   until [ "$(date -u +%H%M)" -ge 0200 ]; do sleep 60; done
 fi
 D=$(date -u +%F); DD=$(date -u +%Y%m%d)
-latest() { $K competitions submissions -c arc-prize-2026-arc-agi-3 --csv 2>/dev/null | sed -n '2p'; }
+latest() { $K competitions submissions -c arc-prize-2026-arc-agi-3 --csv 2>/dev/null | grep -E '^[0-9]+,' | head -1; }  # skip CLI warning lines
 if latest | grep -q "$D"; then
   echo "$(date -u +%F' '%H:%M) slot $DD already used (task run)" >> $LOG
   exit 0

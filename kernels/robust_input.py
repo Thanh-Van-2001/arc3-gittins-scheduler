@@ -5,7 +5,7 @@ commit runs: the server most likely never came up. Two cheap guards:
 - JustAdev742's --input-fallback resolver remaps datasets and the competition between Kaggle's two mount layouts but
   not models; this one also tries the model layouts (no models/<owner> prefix, capitalised framework folder) and, as a
   last resort, searches /kaggle/input for the slug (5 levels) and follows the tail case-insensitively.
-- ARC3_HTTP_RETRY_INITIAL_SECONDS 900 -> 2400: each game's first request waits up to 40 min for a slow server boot
+- ARC3_HTTP_RETRY_INITIAL_SECONDS 900 -> 5400: each game's first request waits up to 90 min for a slow server boot
   (Saturday 00:00 UTC storage ran 4-5x slow per JustAdev's log; a normal boot is ~8.5 min).
 """
 
@@ -59,7 +59,7 @@ def _ours_input(path):
 OLD_START = "import os as _ours_os\ndef _ours_input(path):\n"
 OLD_END = "# <<< ours (--input-fallback)"
 GRACE_OLD = "os.environ['ARC3_HTTP_RETRY_INITIAL_SECONDS'] = '900'"
-GRACE_NEW = "os.environ['ARC3_HTTP_RETRY_INITIAL_SECONDS'] = '2400'  # Talyxion v3: survive a slow model boot"
+GRACE_NEW = "os.environ['ARC3_HTTP_RETRY_INITIAL_SECONDS'] = '5400'  # Talyxion: survive a slow model boot (36-48 min loads seen 10-22)"
 
 
 def harden(src: str) -> str:
