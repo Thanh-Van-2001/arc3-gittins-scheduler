@@ -82,6 +82,10 @@ if use_draft:
     hits = [c for c in nb["cells"] if "def _ours_draft_dir" in "".join(c["source"])]
     assert len(hits) == 1
     hits[0]["source"] = harden_draft("".join(hits[0]["source"])).splitlines(keepends=True)
+from robust_input import harden_rerun  # noqa: E402
+hits = [c for c in nb["cells"] if "TRUE_SUBMISSION = os.environ.get(" in "".join(c["source"])]
+assert len(hits) == 1
+hits[0]["source"] = harden_rerun("".join(hits[0]["source"])).splitlines(keepends=True)
 first = "".join(nb["cells"][0]["source"])
 assert "**Our arm (scottmahony, built by " in first
 nb["cells"][0]["source"] = first.replace("**Our arm (scottmahony, built by ", "**Talyxion arm (built with JustAdev742's ").splitlines(keepends=True)

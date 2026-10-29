@@ -66,3 +66,24 @@ def harden(src: str) -> str:
     assert src.count(OLD_START) == 1 and src.count(OLD_END) == 1 and src.count(GRACE_OLD) == 1
     a, b = src.index(OLD_START), src.index(OLD_END)
     return src[:a] + RESOLVER + src[b:].replace(GRACE_OLD, GRACE_NEW)
+
+
+# Rerun detection (forum, weitaoguo 10-22: a scored rerun without KAGGLE_IS_COMPETITION_RERUN took the offline branch
+# and scored 0.00). Also treat the run as scored when the competition gateway's host name resolves; in a Save & Run
+# there is no such host, so the offline branch is unchanged.
+RERUN_OLD = 'TRUE_SUBMISSION = os.environ.get("KAGGLE_IS_COMPETITION_RERUN", "").strip().lower() in {"1", "true"}\n'
+RERUN_NEW = RERUN_OLD + (
+    "if not TRUE_SUBMISSION:  # Talyxion: gateway host present -> scored rerun even without the env flag\n"
+    "    import socket as _ours_socket\n"
+    "    try:\n"
+    "        _ours_socket.getaddrinfo('gateway', 8001)\n"
+    "        TRUE_SUBMISSION = True\n"
+    "        print('ours: gateway host resolves -> treating this run as the competition rerun')\n"
+    "    except OSError:\n"
+    "        pass\n"
+)
+
+
+def harden_rerun(src: str) -> str:
+    assert src.count(RERUN_OLD) == 1, "TRUE_SUBMISSION line not found"
+    return src.replace(RERUN_OLD, RERUN_NEW)
