@@ -1,28 +1,67 @@
-import json, numpy as np, matplotlib
+"""Cover image for the Paper Track writeup (v3): the leaderboard ladder and the three measurements of the scheduler.
+
+Numbers: results/lb_submissions.csv (ladder; means exclude zero/error runs), community tally (tantan0327, 76 stock
+Franzen copies), analysis/gate_ab.py over results/run1..run4 (paired offline +3.24 +/- 2.47), simulator (+5.8 +/- 0.4).
+"""
+import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-SURF, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
-C = {"gittins": "#2a78d6", "franzen": "#eb6834", "equal": "#1baf7a"}
-S = json.load(open(r"D:\arc3_paper\analysis\scale_ablation.json"))
+import matplotlib.pyplot as plt  # noqa: E402
+
+SURF, INK, INK2, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#8a8984", "#e4e3df"
+ACCENT, BASE = "#2a78d6", "#b9b8b1"
 plt.rcParams.update({"figure.facecolor": SURF, "axes.facecolor": SURF, "font.size": 13, "axes.spines.top": False,
-                     "axes.spines.right": False, "axes.edgecolor": INK2, "xtick.color": INK2, "ytick.color": INK2})
+                     "axes.spines.right": False, "axes.spines.left": False, "axes.edgecolor": INK2,
+                     "xtick.color": INK2, "ytick.color": INK2})
+
 fig = plt.figure(figsize=(12, 6))
-fig.text(0.04, 0.90, "Spend tokens where they pay", fontsize=26, color=INK, weight="bold")
-fig.text(0.04, 0.83, "Bayesian Gittins scheduling for ARC-AGI-3 agents", fontsize=17, color=INK2)
-ax = fig.add_axes([0.07, 0.12, 0.40, 0.6])
-x = np.array([0.25, 0.5, 1.0, 2.0, 4.0])
-for k, lab in [("gittins", "Bayesian Gittins (ours)"), ("franzen", "Franzen priority"), ("equal", "Equal split")]:
-    ax.plot(x, [S[str(v)][k] for v in x], marker="o", ms=7, lw=2.2, color=C[k], label=lab)
-ax.plot(x, [S[str(v)]["oracle"] for v in x], ls="--", color=INK2, lw=1.5, label="Clairvoyant oracle")
-ax.set_xscale("log", base=2); ax.set_xticks(x); ax.set_xticklabels([f"{v:g}×" for v in x]); ax.set_ylim(0, 100)
-ax.axvline(1, color=INK2, ls=":", lw=1); ax.grid(color=GRID); ax.legend(frameon=False, fontsize=11, loc="upper left")
-ax.set_xlabel("compute budget (1× = one 9-h run)", color=INK2); ax.set_ylabel("simulated score", color=INK2)
-ax2 = fig.add_axes([0.62, 0.12, 0.34, 0.6])
-m = S["1.0"]
-bars = [("Equal", m["equal"], C["equal"]), ("Franzen", m["franzen"], C["franzen"]), ("Gittins", m["gittins"], C["gittins"]), ("Oracle", m["oracle"], "#c3c2b7")]
-for i, (lab, v, col) in enumerate(bars):
-    ax2.bar(i, v, width=0.62, color=col)
-    ax2.text(i, v + 1.2, f"{v:.1f}", ha="center", color=INK, fontsize=13)
-ax2.set_xticks(range(len(bars))); ax2.set_xticklabels([b[0] for b in bars]); ax2.set_ylim(0, 60); ax2.grid(axis="y", color=GRID)
-ax2.set_title("score at the competition budget", color=INK2, fontsize=13, loc="left")
-fig.savefig(r"D:\arc3_paper\figs\cover.png", dpi=150); print("ok")
+fig.text(0.04, 0.905, "Spend tokens where they pay", fontsize=27, color=INK, weight="bold")
+fig.text(0.04, 0.835, "What scheduling, throughput and reliability buy an ARC-AGI-3 agent", fontsize=16, color=INK2)
+fig.text(0.04, 0.012, "Team Talyxion · built on Franzen's Milestone-2 notebook, Tufa Labs' Duck harness and JustAdev742's tooling",
+         fontsize=10.5, color=MUTED)
+
+# left: leaderboard ladder (mean +/- SD of valid runs)
+ladder = [("Stock Franzen copies", 26.8, 3.6, 76, False),
+          ("+ Gittins scheduler + fix", 25.5, 3.1, 4, False),
+          ("+ REAP-448, 14 streams", 26.8, 1.8, 7, False),
+          ("+ harness bundle, token map", 28.3, 2.5, 6, False),
+          ("+ fine-tuned MTP draft", 28.8, 3.6, 7, True)]
+ax = fig.add_axes([0.255, 0.16, 0.30, 0.57])
+for i, (lab, m, sd, n, hi) in enumerate(ladder):
+    y = len(ladder) - 1 - i
+    col = ACCENT if hi else BASE
+    ax.plot([m - sd, m + sd], [y, y], color=col, lw=2, solid_capstyle="round")
+    ax.plot(m, y, "o", ms=9, color=col, markeredgecolor=SURF, markeredgewidth=2)
+    ax.text(m, y + 0.3, f"{m:.1f}  (n={n})", ha="center", va="bottom", fontsize=11.5, color=INK)
+    ax.text(17.6, y, lab, va="center", ha="right", fontsize=12, color=INK if hi else INK2)
+ax.plot(35.73, 0, "D", ms=8, color=ACCENT, markeredgecolor=SURF, markeredgewidth=1.5)
+ax.text(35.73, 0.3, "best run\n35.73", ha="center", va="bottom", fontsize=10.5, color=INK)
+ax.set_xlim(18, 38)
+ax.set_ylim(-0.5, len(ladder) - 0.25)
+ax.set_yticks([])
+ax.grid(axis="x", color=GRID)
+ax.set_xlabel("public leaderboard score (mean ± SD)", color=INK2)
+ax.set_title("Leaderboard, 31 submissions", color=INK2, fontsize=13, loc="left", x=-0.82)
+
+# right: one scheduler, three measurements (gain over Franzen's gate)
+ax2 = fig.add_axes([0.70, 0.16, 0.27, 0.57])
+floor = 3.5  # 2 SE of a difference of means at ~7 runs per arm, SD ~3.3
+ax2.axhspan(-floor, floor, xmin=0.78, xmax=0.98, color=GRID)
+pts = [(0, 5.8, 0.4, "Simulator"), (1, 3.24, 2.47, "Paired runs\n(4 pairs, ±1 SE)")]
+for x, m, e, lab in pts:
+    ax2.plot([x, x], [m - e, m + e], color=ACCENT, lw=2, solid_capstyle="round")
+    ax2.plot(x, m, "o", ms=9, color=ACCENT, markeredgecolor=SURF, markeredgewidth=2)
+    ax2.text(x + 0.12, m, f"+{m:.1f}", va="center", fontsize=12, color=INK)
+ax2.text(2, 0, "noise\nfloor\n±3.5", ha="center", va="center", fontsize=11, color=INK2)
+ax2.axhline(0, color=INK2, lw=1)
+ax2.set_xticks([0, 1, 2])
+ax2.set_xticklabels(["Simulator", "Paired\noffline runs", "Leader-\nboard"], fontsize=11.5)
+ax2.set_xlim(-0.5, 2.6)
+ax2.set_ylim(-4.5, 8)
+ax2.grid(axis="y", color=GRID)
+ax2.spines["left"].set_visible(True)
+ax2.set_ylabel("gain over Franzen's gate (points)", color=INK2)
+ax2.set_title("One scheduler, three measurements", color=INK2, fontsize=13, loc="left")
+
+fig.savefig(r"D:\arc3_paper\figs\cover.png", dpi=150)
+print("ok")
